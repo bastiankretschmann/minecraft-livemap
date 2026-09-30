@@ -1,0 +1,13 @@
+name: LiveMap
+version: '${version}'
+main: de.livemap.LiveMapPlugin
+api-version: '26.2'
+description: Live web map published to GitHub Pages
+commands:
+  livemap:
+    description: LiveMap control
+    usage: /livemap <publish|status>
+    permission: livemap.admin
+permissions:
+  livemap.admin:
+    default: op

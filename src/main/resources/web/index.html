@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html, body { height: 100%; margin: 0; background: #111; font-family: system-ui, sans-serif; }
+  #map { height: 100%; background: #0b0b0b; }
+  .leaflet-tile { image-rendering: pixelated; }
+  .panel { position: absolute; z-index: 1000; top: 10px; right: 10px; background: rgba(20,20,20,.88); color: #eee;
+           padding: 10px 12px; border-radius: 8px; font-size: 13px; min-width: 150px; }
+  .panel select { width: 100%; margin-bottom: 8px; background: #222; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 3px; }
+  .panel ul { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
+  .panel li { cursor: pointer; padding: 2px 0; display: flex; align-items: center; gap: 6px; }
+  .panel li img { width: 16px; height: 16px; image-rendering: pixelated; }
+  .muted { color: #999; font-size: 11px; margin-top: 6px; }
+  #coords { position: absolute; z-index: 1000; bottom: 10px; left: 10px; background: rgba(20,20,20,.88); color: #eee;
+            padding: 4px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; }
+  .head { width: 24px !important; height: 24px !important; border: 2px solid #fff; border-radius: 4px; image-rendering: pixelated; box-shadow: 0 0 4px #000; }
+  .tip { background: rgba(20,20,20,.9); color: #fff; border: 0; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="panel">
+  <select id="world"></select>
+  <div><b id="count">0</b> Spieler online</div>
+  <ul id="players"></ul>
+  <div class="muted" id="updated"></div>
+</div>
+<div id="coords">X: 0 Z: 0</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const crs = L.extend({}, L.CRS.Simple, { transformation: new L.Transformation(1, 0, 1, 0) });
+const map = L.map('map', { crs, minZoom: -4, maxZoom: 4, zoom: 0, center: [0, 0], attributionControl: false });
+
+let data = { worlds: [], players: [], versions: {} };
+let world = null;
+let layer = null;
+const markers = new Map();
+
+const TL = L.TileLayer.extend({
+  getTileUrl(c) {
+    const key = world + '/' + c.x + '_' + c.y;
+    const v = data.versions[key];
+    return v === undefined ? BLANK : 'tiles/' + encodeURIComponent(world) + '/' + c.x + '_' + c.y + '.png?v=' + v;
+  }
+});
+
+function setWorld(id) {
+  world = id;
+  if (layer) map.removeLayer(layer);
+  layer = new TL('', { tileSize: 256, minNativeZoom: 0, maxNativeZoom: 0, minZoom: -4, maxZoom: 4, errorTileUrl: BLANK, noWrap: true });
+  layer.addTo(map);
+  markers.forEach(m => map.removeLayer(m)); markers.clear();
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('players');
+  list.innerHTML = '';
+  const here = data.players.filter(p => p.world === world);
+  document.getElementById('count').textContent = data.players.length;
+  const names = new Set();
+  for (const p of here) {
+    names.add(p.name);
+    const ll = [p.z, p.x];
+    let m = markers.get(p.name);
+    if (!m) {
+      const icon = L.icon({ iconUrl: 'https://minotar.net/helm/' + encodeURIComponent(p.name) + '/24.png', className: 'head', iconSize: [24, 24] });
+      m = L.marker(ll, { icon }).bindTooltip(p.name, { className: 'tip', direction: 'top' }).addTo(map);
+      markers.set(p.name, m);
+    } else m.setLatLng(ll);
+    const li = document.createElement('li');
+    li.innerHTML = '<img src="https://minotar.net/helm/' + encodeURIComponent(p.name) + '/16.png"><span></span>';
+    li.lastChild.textContent = p.name + ' (' + p.x + ', ' + p.z + ')';
+    li.onclick = () => map.setView(ll, 1);
+    list.appendChild(li);
+  }
+  for (const [n, m] of markers) if (!names.has(n)) { map.removeLayer(m); markers.delete(n); }
+}
+
+async function refresh(first) {
+  try {
+    const r = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
+    const d = await r.json();
+    const changed = JSON.stringify(d.versions) !== JSON.stringify(data.versions);
+    data = d;
+    const sel = document.getElementById('world');
+    if (sel.options.length !== d.worlds.length) {
+      sel.innerHTML = '';
+      d.worlds.forEach(w => sel.add(new Option(w.name, w.id)));
+    }
+    if (first && d.worlds.length) {
+      setWorld(d.worlds[0].id);
+      const p = d.players.find(p => p.world === world);
+      if (p) map.setView([p.z, p.x], 1);
+    } else {
+      if (changed && layer) layer.redraw();
+      renderPlayers();
+    }
+    document.getElementById('updated').textContent = 'Stand: ' + new Date(d.time * 1000).toLocaleTimeString();
+  } catch (e) {
+    document.getElementById('updated').textContent = 'Keine Daten verfügbar';
+  }
+}
+
+document.getElementById('world').onchange = e => setWorld(e.target.value);
+map.on('mousemove', e => { document.getElementById('coords').textContent = 'X: ' + Math.floor(e.latlng.lng) + ' Z: ' + Math.floor(e.latlng.lat); });
+map.setView([0, 0], 0);
+refresh(true);
+setInterval(() => refresh(false), 20000);
+</script>
+</body>
+</html>

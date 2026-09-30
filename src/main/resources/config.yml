@@ -1,0 +1,23 @@
+github:
+  # Fine-grained Personal Access Token with "Contents: Read and write" on the repo below.
+  # Alternatively set the environment variable LIVEMAP_TOKEN.
+  token: ""
+  repo: "bastiankretschmann/minecraft-livemap"
+  branch: "gh-pages"
+
+# How often (seconds) changed tiles are pushed to GitHub. GitHub Pages needs ~1 min to deploy.
+publish-interval-seconds: 300
+
+# How often (seconds) the area around players is re-rendered.
+render-interval-seconds: 30
+
+# Chunks around each player that are rendered.
+render-radius-chunks: 10
+
+# Max chunks snapshotted per server tick (keeps TPS stable).
+chunks-per-tick: 4
+
+# Empty list = all worlds.
+worlds: []
+
+show-players: true
