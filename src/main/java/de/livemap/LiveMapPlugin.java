@@ -49,7 +49,7 @@ public final class LiveMapPlugin extends JavaPlugin {
         }
 
         long renderTicks = Math.max(5, getConfig().getLong("render-interval-seconds", 30)) * 20L;
-        long publishTicks = Math.max(30, getConfig().getLong("publish-interval-seconds", 300)) * 20L;
+        long publishTicks = Math.max(15, getConfig().getLong("publish-interval-seconds", 60)) * 20L;
         int perTick = Math.max(1, getConfig().getInt("chunks-per-tick", 4));
 
         getServer().getScheduler().runTaskTimer(this, this::queueChunks, 100L, renderTicks);

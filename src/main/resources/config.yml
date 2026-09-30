@@ -6,10 +6,10 @@ github:
   branch: "gh-pages"
 
 # How often (seconds) changed tiles are pushed to GitHub. GitHub Pages needs ~1 min to deploy.
-publish-interval-seconds: 300
+publish-interval-seconds: 60
 
 # How often (seconds) the area around players is re-rendered.
-render-interval-seconds: 30
+render-interval-seconds: 15
 
 # Chunks around each player that are rendered.
 render-radius-chunks: 10

@@ -9,7 +9,7 @@ in den `gh-pages`-Branch dieses Repos pusht. GitHub Pages liefert die Karte (Lea
 1. `LiveMap.jar` aus den [Releases](../../releases) in den `plugins/`-Ordner legen.
 2. Auf GitHub ein **Fine-grained Personal Access Token** erstellen (nur dieses Repo, Permission *Contents: Read and write*).
 3. Token in `plugins/LiveMap/config.yml` unter `github.token` eintragen (oder Umgebungsvariable `LIVEMAP_TOKEN`). Server neu starten.
-4. Karte füllt sich rund um Spieler (`render-radius-chunks`) und wird alle `publish-interval-seconds` hochgeladen.
+4. Karte füllt sich rund um Spieler (`render-radius-chunks`) und wird alle `publish-interval-seconds` (Standard 60 s) hochgeladen.
 
 Befehle: `/livemap` (Status), `/livemap publish` (sofort hochladen) – Permission `livemap.admin`.
 
