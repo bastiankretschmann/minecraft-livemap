@@ -31,7 +31,7 @@ final class ChunkRenderer {
                 while (c.getAlpha() == 0 && y > minY && guard++ < 32) {
                     y--;
                     d = s.getBlockData(x, y, z);
-                    if (d.isAir()) continue;
+                    if (d.getMaterial().isAir()) continue;
                     c = d.getMapColor();
                 }
                 if (c.getAlpha() == 0) continue;
@@ -61,13 +61,13 @@ final class ChunkRenderer {
     private static int surfaceY(ChunkSnapshot s, int x, int z, World.Environment env, int minY, int maxY) {
         if (env == World.Environment.NETHER) {
             for (int y = Math.min(120, maxY - 2); y > minY; y--) {
-                if (!s.getBlockData(x, y, z).isAir() && s.getBlockData(x, y + 1, z).isAir()) return y;
+                if (!s.getBlockData(x, y, z).getMaterial().isAir() && s.getBlockData(x, y + 1, z).getMaterial().isAir()) return y;
             }
             return NONE;
         }
         int y = s.getHighestBlockYAt(x, z);
         if (y < minY || y >= maxY) return NONE;
-        while (y > minY && s.getBlockData(x, y, z).isAir()) y--;
-        return s.getBlockData(x, y, z).isAir() ? NONE : y;
+        while (y > minY && s.getBlockData(x, y, z).getMaterial().isAir()) y--;
+        return s.getBlockData(x, y, z).getMaterial().isAir() ? NONE : y;
     }
 }
